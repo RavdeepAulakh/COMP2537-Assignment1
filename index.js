@@ -154,10 +154,20 @@ app.post('/submitUser', async (req,res) => {
     var username = req.body.username;
     var password = req.body.password;
     var email = req.body.email;
+
+    if (!email){
+        return res.send('<p>Email cannot be blank</p><p><a href="/createUser">Try again</a></p>');
+    }
+    if(!password){
+        return res.send('<p>Password cannot be blank</p><p><a href="/createUser">Try again</a></p>');
+    }
+    if(!username){
+        return res.send('<p>Username cannot be blank</p><p><a href="/createUser">Try again</a></p>');
+    }
 	const schema = Joi.object(
 		{
 			username: Joi.string().alphanum().max(20).required(),
-            email: Joi.string().max(20).required(),
+            email: Joi.string().email().required(),
 			password: Joi.string().max(20).required()
 		});
 	
@@ -172,7 +182,9 @@ app.post('/submitUser', async (req,res) => {
 	
 	await userCollection.insertOne({username: username, password: hashedPassword, email: email});
 	console.log("Inserted user");
-
+    req.session.username = username;
+    req.session.authenticated = true;
+    req.session.cookie.maxAge = expireTime;
     res.redirect('/loggedin');
 });
 
